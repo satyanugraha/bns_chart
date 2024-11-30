@@ -1,0 +1,7 @@
+ID,Name,Title,ParentID,Completed,InProgress,NotCompleted,NotStarted
+1,Anton Prakoso,Chief Executive,,79,10,6,5
+2,Muh. Fitrah,IC & Compliance,1,2,0,0,0
+3,Ahmad Maulana,IC & Compliance Staff,2,1,0,0,0
+4,Muh Asrul,IT System & Data Analyst,1,10,3,1,0
+5,Aldiansyah,Data Analyst Staff,4,1,0,0,0
+6,Aditya Jayadi,Logistik & Distribusi,1,12,5,2,3

@@ -1,0 +1,196 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      .node-container {
+        font-family: 'Inter', sans-serif;
+        position: absolute;
+        margin-top: -1px;
+        margin-left: -1px;
+        border-radius: 10px;
+        border: 1px solid #E4E2E9;
+      }
+
+      .node-name {
+        font-size: 15px;
+        color: #08011E;
+        margin-left: 20px;
+        margin-top: 20px;
+      }
+
+      .node-position {
+        color: #716E7B;
+        margin-left: 20px;
+        margin-top: 3px;
+        font-size: 10px;
+      }
+
+      .metrics-container {
+        display: flex;
+        margin-left: 20px;
+        margin-top: 15px;
+        margin-bottom: 32px;
+        font-size: 11px;
+      }
+
+      .metric-badge {
+        padding: 3px 8px;
+        border-radius: 8px;
+        display: flex;
+      }
+
+      .metric-badge:not(:first-child) {
+        margin-left: 6px;
+      }
+
+      .metric-icon {
+        margin-right: 3px;
+      }
+
+      .metric-numbers {
+        text-align: right;
+      }
+
+      .completed-badge {
+        color: #34A853;
+        background-color: #E6F4EA;
+      }
+
+      .in-progress-badge {
+        color: #FBBC05;
+        background-color: #FEF7E0;
+      }
+
+      .not-completed-badge {
+        color: #EA4335;
+        background-color: #FCE8E6;
+      }
+
+      .not-started-badge {
+        color: #717171;
+        background-color: #F1F3F4;
+      }
+
+      .expand-button {
+        color: #716E7B;
+        border-radius: 5px;
+        padding: 4px;
+        font-size: 10px;
+        margin: auto auto;
+        background-color: white;
+        border: 1px solid #E4E2E9;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-org-chart@2.6.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.1.2/build/d3-flextree.js"></script>
+    <div class="chart-container" style="height: 1200px; background-color: #fffeff"></div>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <script>
+      var chart;
+
+      // Load and process CSV data
+      d3.csv('https://raw.githubusercontent.com/rraihansaputra/supper-dollop-org-chart/refs/heads/main/data.csv?token=GHSAT0AAAAAACTQOE5VCFEW2IP5MWHGB2PWZ2KQPTQ').then((csvData) => {
+        // Transform CSV data to match required format
+        const data = csvData.map(row => ({
+          id: row.ID,
+          name: row.Name,
+          positionName: row.Title,
+          parentId: row.ParentID,
+          Completed: +row.Completed,
+          InProgress: +row.InProgress,
+          NotCompleted: +row.NotCompleted,
+          NotStarted: +row.NotStarted
+        }));
+
+        // Calculate additional properties
+        data.forEach((node) => {
+          node._directSubordinates = data.filter(
+            (item) => item.parentId === node.id
+          ).length;
+          node._totalTasks = node.Completed + node.InProgress + node.NotCompleted + node.NotStarted;
+        });
+
+        chart = new d3.OrgChart()
+          .container('.chart-container')
+          .data(data)
+          .nodeHeight((d) => 120)
+          .nodeWidth((d) => 258)
+          .childrenMargin((d) => 50)
+          .compactMarginBetween((d) => 25)
+          .compactMarginPair((d) => 50)
+          .neightbourMargin((a, b) => 25)
+          .siblingsMargin((d) => 25)
+          .buttonContent(({ node, state }) => {
+            return `<div class="expand-button">
+                     <span style="font-size:9px">
+                       ${node.children ? `<i class="fas fa-angle-up"></i>` : `<i class="fas fa-angle-down"></i>`}
+                     </span> 
+                     ${node.data._directSubordinates}
+                   </div>`;
+          })
+          .linkUpdate(function (d, i, arr) {
+            d3.select(this)
+              .attr('stroke', (d) =>
+                d.data._upToTheRootHighlighted ? '#152785' : '#E4E2E9'
+              )
+              .attr('stroke-width', (d) =>
+                d.data._upToTheRootHighlighted ? 5 : 1
+              );
+            if (d.data._upToTheRootHighlighted) {
+              d3.select(this).raise();
+            }
+          })
+          .nodeContent(function (d, i, arr, state) {
+            return `
+              <div class="node-container" style="background-color:#FFFFFF;width:${d.width}px;height:${d.height}px;">
+                <div class="node-name">${d.data.name}</div>
+                <div class="node-position">${d.data.positionName}</div>
+                
+                <div class="metrics-container">
+                  <div class="metric-badge completed-badge">
+                    <div class="metric-icon">✓</div>
+                    <div class="metric-numbers">
+                      <span>${d.data._totalTasks ? Math.round((d.data.Completed/d.data._totalTasks)*100) : 0}%</span>
+                      <br>
+                      <span>${d.data.Completed}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="metric-badge in-progress-badge">
+                    <div class="metric-icon">↻</div>
+                    <div class="metric-numbers">
+                      <span>${d.data._totalTasks ? Math.round((d.data.InProgress/d.data._totalTasks)*100) : 0}%</span>
+                      <br>
+                      <span>${d.data.InProgress}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="metric-badge not-completed-badge">
+                    <div class="metric-icon">✗</div>
+                    <div class="metric-numbers">
+                      <span>${d.data._totalTasks ? Math.round((d.data.NotCompleted/d.data._totalTasks)*100) : 0}%</span>
+                      <br>
+                      <span>${d.data.NotCompleted}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="metric-badge not-started-badge">
+                    <div class="metric-icon">○</div>
+                    <div class="metric-numbers">
+                      <span>${d.data._totalTasks ? Math.round((d.data.NotStarted/d.data._totalTasks)*100) : 0}%</span>
+                      <br>
+                      <span>${d.data.NotStarted}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          })
+          .render();
+      });
+    </script>
+  </body>
+</html>
