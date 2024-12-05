@@ -92,7 +92,7 @@
       var chart;
 
       // Load and process CSV data
-      d3.csv('https://raw.githubusercontent.com/rraihansaputra/supper-dollop-org-chart/refs/heads/main/data.csv?token=GHSAT0AAAAAACTQOE5VCFEW2IP5MWHGB2PWZ2KQPTQ').then((csvData) => {
+      d3.csv('https://raw.githubusercontent.com/satyanugraha/bns_chart/refs/heads/main/data.csv').then((csvData) => {
         // Transform CSV data to match required format
         const data = csvData.map(row => ({
           id: row.ID,
